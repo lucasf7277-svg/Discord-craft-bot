@@ -1,228 +1,523 @@
 import discord
 from discord.ext import commands
+from discord.ui import View, Select
+import math
+import os
 
-TOKEN = "MTQ4MDM4MjIyNzQ0MjU2NTE2Mg.GLyOqI.LCfdjx02JY7jLLljVtsRarKZQD4pGA2mvCKOPg"
+TOKEN = "MTQ4MDM4MjIyNzQ0MjU2NTE2Mg.GyJdIA.OE-ApaOP6xwYmW5bz80FyRQEMyfNlFDMELSEhc"
 
 intents = discord.Intents.default()
 intents.message_content = True
 
 bot = commands.Bot(command_prefix="!", intents=intents)
 
-# LOCAIS DE CRAFT
+# =========================
+# LOCAIS
+# =========================
 
-locais = {
-"geral":"CP 941 - Craft Geral",
-"laboratorio":"CP 1016 - Laboratório",
-"siderurgia":"CP 174 - Siderurgia",
-"reciclagem":"CP 3021 - Reciclagem",
-"carregadores":"CP 934 - Trevor",
-"pecas":"CP 1053 - Pescadores",
-"armas":"Craft de armas"
+locais_craft = {
+    "Craft Geral": "CP 941",
+    "Laboratório": "CP 1016",
+    "Siderurgia": "CP 174",
+    "Reciclagem": "CP 3021",
+    "Carregadores": "CP 934",
+    "Peças de Arma": "CP 1053",
+    "Armas Leves": "CP 3001",
+    "Armas Pesadas": "CP 1007"
 }
 
+# =========================
 # RECEITAS
+# =========================
 
-receitas = {
-
-"peca_basica":{
-"local":"pecas",
-"lote":2,
-"materiais":{"ABS":2,"Aluminio":1,"Borracha":1,"Dinheiro":400,"Pedaco_metal":2}
-},
-
-"peca_avancada":{
-"local":"pecas",
-"lote":2,
-"materiais":{"Aluminio":1,"Aco":2,"Borracha":1,"Bronze":1,"Dinheiro":600,"Polimero":1}
-},
-
-"carregador_pistola":{
-"local":"carregadores",
-"lote":2,
-"materiais":{"Cobre":1,"Niquel":1,"Polvora":1,"Dinheiro":1500}
-},
-
-"carregador_smg":{
-"local":"carregadores",
-"lote":2,
-"materiais":{"Cobre":1,"Niquel":2,"Polvora":2,"Dinheiro":2000}
-},
-
-"carregador_shotgun":{
-"local":"carregadores",
-"lote":2,
-"materiais":{"Cobre":1,"Niquel":2,"Polvora":2,"Dinheiro":1500}
-},
-
-"carregador_rifle":{
-"local":"carregadores",
-"lote":2,
-"materiais":{"Cobre":1,"Niquel":3,"Polvora":3,"Dinheiro":3000}
-},
-
-"fibra":{
-"local":"reciclagem",
-"lote":1,
-"materiais":{"Couro":2,"Pele":3}
-},
-
-"polimero":{
-"local":"reciclagem",
-"lote":1,
-"materiais":{"Nylon":1,"Vidro":1}
-},
-
-"aluminio":{
-"local":"reciclagem",
-"lote":2,
-"materiais":{"Estanho":2,"Tecido":2}
-},
-
-"abs":{
-"local":"laboratorio",
-"lote":1,
-"materiais":{"Fibra":1,"Plastico":1}
-},
-
-"aco":{
-"local":"siderurgia",
-"lote":10,
-"materiais":{"Mining_drill":1}
-},
-
-"bronze":{
-"local":"siderurgia",
-"lote":1,
-"materiais":{"Cobre":1,"Estanho":1}
-},
-
-"barra_ouro":{
-"local":"siderurgia",
-"lote":1,
-"materiais":[
-{"Carvao":6,"Pulseira_ouro":6},
-{"Carvao":3,"Ouro_estatal":3}
-]
-},
+receitas_craft = {
 
 "copo_cartao":{
-"local":"geral",
+"local":"Craft Geral",
 "lote":1,
-"materiais":{"Cartao":2}
+"materiais":{"cartao":2}
 },
 
 "saco_plastico":{
-"local":"geral",
+"local":"Craft Geral",
 "lote":5,
-"materiais":{"Plastico":1}
-},
-
-"tesoura":{
-"local":"geral",
-"lote":1,
-"materiais":{"Pedaco_metal":5,"Plastico":10}
-},
-
-"lata_vazia":{
-"local":"geral",
-"lote":1,
-"materiais":{"Aluminio":3}
+"materiais":{"plastico":2}
 },
 
 "radio":{
-"local":"geral",
+"local":"Craft Geral",
 "lote":1,
-"materiais":{"ABS":5,"Borracha":10,"Restos_eletronicos":10}
+"materiais":{
+"abs":5,
+"borracha":10,
+"restos_eletronicos":10
+}
 },
 
-"rebarbadora":{
-"local":"geral",
+"tesoura":{
+"local":"Craft Geral",
 "lote":1,
-"materiais":{"ABS":20,"Aluminio":40,"Aco":30,"Cobre":8}
+"materiais":{
+"pedaco_de_metal":5,
+"plastico":10
+}
 },
 
-"lockpick_avancada":{
-"local":"geral",
+"lata_vazia":{
+"local":"Craft Geral",
 "lote":1,
-"materiais":{"Aco":85,"Parafusos":5}
+"materiais":{"aluminio":3}
 },
 
 "saco_ginasio":{
-"local":"geral",
+"local":"Craft Geral",
 "lote":1,
-"materiais":{"Tecido":20}
+"materiais":{"tecido":20}
+},
+
+"rebarbadora":{
+"local":"Craft Geral",
+"lote":1,
+"materiais":{
+"abs":20,
+"aluminio":40,
+"aco":30,
+"cobre":8
+}
+},
+
+"lockpick_avancada":{
+"local":"Craft Geral",
+"lote":1,
+"materiais":{
+"aco":85,
+"parafusos":5
+}
+},
+
+"broca_basica":{
+"local":"Craft Geral",
+"lote":1,
+"materiais":{
+"aco":90,
+"cobre":70,
+"pedaco_de_metal":40
+}
+},
+
+"furadora_basica":{
+"local":"Craft Geral",
+"lote":1,
+"materiais":{
+"broca_basica":1,
+"mola":10,
+"parafusos":10,
+"plastico":200,
+"restos_eletronicos":100
+}
+},
+
+"jammer":{
+"local":"Craft Geral",
+"lote":1,
+"materiais":{
+"abs":20,
+"borracha":20,
+"prata":3,
+"restos_eletronicos":10
+}
+},
+
+"algemas":{
+"local":"Craft Geral",
+"lote":1,
+"materiais":{
+"aluminio":80,
+"aco":50,
+"mola":4,
+"parafusos":8,
+"prata":80
+}
+},
+
+"abs":{
+"local":"Laboratório",
+"lote":1,
+"materiais":{"fibra":1,"plastico":1}
+},
+
+"nitrato_potassio":{
+"local":"Laboratório",
+"lote":1,
+"materiais":{
+"casca_de_banana":1,
+"morangos":1
+}
+},
+
+"c4":{
+"local":"Laboratório",
+"lote":1,
+"materiais":{
+"abs":10,
+"borracha":20,
+"polvora":10,
+"restos_eletronicos":8
+}
+},
+
+"lingote_ferro":{
+"local":"Siderurgia",
+"lote":1,
+"materiais":{"ferro":1}
+},
+
+"aco":{
+"local":"Siderurgia",
+"lote":1,
+"materiais":{
+"carvao":1,
+"lingote_ferro":1
+}
+},
+
+"bronze":{
+"local":"Siderurgia",
+"lote":1,
+"materiais":{
+"cobre":1,
+"estanho":1
+}
+},
+
+"fibra":{
+"local":"Reciclagem",
+"lote":1,
+"materiais":{
+"couro":2,
+"pele":3
+}
+},
+
+"aluminio":{
+"local":"Reciclagem",
+"lote":2,
+"materiais":{
+"estanho":2,
+"tecido":2
+}
+},
+
+"polimero":{
+"local":"Reciclagem",
+"lote":1,
+"materiais":{
+"nylon":1,
+"vidro":1
+}
+},
+
+"peca_basica":{
+"local":"Peças de Arma",
+"lote":2,
+"materiais":{
+"abs":2,
+"aluminio":1,
+"borracha":1,
+"dinheiro_sujo":400,
+"pedaco_de_metal":2
+}
+},
+
+"peca_avancada":{
+"local":"Peças de Arma",
+"lote":2,
+"materiais":{
+"aluminio":1,
+"aco":2,
+"borracha":1,
+"bronze":1,
+"dinheiro_sujo":600,
+"polimero":1
+}
+},
+
+# =========================
+# CARREGADORES
+# =========================
+
+"carregador_pistola":{
+"local":"Carregadores",
+"lote":2,
+"materiais":{
+"cobre":1,
+"dinheiro_sujo":1500,
+"niquel":1,
+"polvora":1
+}
+},
+
+"carregador_shotgun":{
+"local":"Carregadores",
+"lote":2,
+"materiais":{
+"cobre":1,
+"dinheiro_sujo":1500,
+"niquel":2,
+"polvora":2
+}
+},
+
+"carregador_smg":{
+"local":"Carregadores",
+"lote":2,
+"materiais":{
+"cobre":1,
+"dinheiro_sujo":2000,
+"niquel":2,
+"polvora":2
+}
+},
+
+"carregador_rifle":{
+"local":"Carregadores",
+"lote":2,
+"materiais":{
+"cobre":2,
+"dinheiro_sujo":2500,
+"niquel":2,
+"polvora":3
+}
+},
+
+# =========================
+# ARMAS LEVES
+# =========================
+
+"fn_1922":{
+"local":"Armas Leves",
+"lote":1,
+"materiais":{
+"blueprint_pistola":12,
+"dinheiro_sujo":25000,
+"peca_basica":60
+}
+},
+
+"ranger_12":{
+"local":"Armas Leves",
+"lote":1,
+"materiais":{
+"blueprint_shotgun":16,
+"dinheiro_sujo":35000,
+"peca_basica":80
+}
+},
+
+"desert_eagle":{
+"local":"Armas Leves",
+"lote":1,
+"materiais":{
+"blueprint_pistola":14,
+"dinheiro_sujo":30000,
+"peca_basica":70
+}
+},
+
+"colt_scamp":{
+"local":"Armas Leves",
+"lote":1,
+"materiais":{
+"blueprint_smg":18,
+"dinheiro_sujo":40000,
+"peca_basica":90
+}
+},
+
+"spas_12":{
+"local":"Armas Leves",
+"lote":1,
+"materiais":{
+"blueprint_shotgun":18,
+"dinheiro_sujo":42000,
+"peca_basica":95
+}
+},
+
+"thompson":{
+"local":"Armas Leves",
+"lote":1,
+"materiais":{
+"blueprint_smg":20,
+"dinheiro_sujo":45000,
+"peca_basica":100
+}
+},
+
+# =========================
+# ARMAS PESADAS
+# =========================
+
+"sig_pdw":{
+"local":"Armas Pesadas",
+"lote":1,
+"materiais":{
+"blueprint_rifle":20,
+"dinheiro_sujo":55000,
+"peca_avancada":100
+}
+},
+
+"akm":{
+"local":"Armas Pesadas",
+"lote":1,
+"materiais":{
+"blueprint_rifle":22,
+"dinheiro_sujo":60000,
+"peca_avancada":110
+}
+},
+
+"famas":{
+"local":"Armas Pesadas",
+"lote":1,
+"materiais":{
+"blueprint_rifle":22,
+"dinheiro_sujo":62000,
+"peca_avancada":115
+}
+},
+
+"tar21":{
+"local":"Armas Pesadas",
+"lote":1,
+"materiais":{
+"blueprint_rifle":24,
+"dinheiro_sujo":70000,
+"peca_avancada":120
+}
+}
 }
 
-}
+# =========================
+# MENU
+# =========================
 
-# COMANDO CRAFT
+class LocalSelect(Select):
 
-@bot.command()
-async def craft(ctx,item:str,quantidade:int):
+    def __init__(self):
 
-    item=item.lower()
+        options = []
 
-    if item not in receitas:
-        await ctx.send("Item não encontrado.")
-        return
+        for local, cp in locais_craft.items():
+            options.append(discord.SelectOption(label=f"{local} ({cp})"))
 
-    receita=receitas[item]
-    lote=receita["lote"]
+        super().__init__(placeholder="Escolhe o local", options=options)
 
-    if quantidade%lote!=0:
-        await ctx.send(f"A quantidade deve ser múltiplo de {lote}")
-        return
+    async def callback(self, interaction: discord.Interaction):
 
-    crafts=quantidade//lote
+        local_label = self.values[0]
+        local = local_label.split(" (")[0]
 
-    mensagem=f"**Craft de {quantidade} {item}**\n"
-    mensagem+=f"Local: {locais[receita['local']]}\n\n"
+        options = []
 
-    materiais=receita["materiais"]
+        for item, data in receitas_craft.items():
+            if data["local"] == local:
+                options.append(discord.SelectOption(label=item))
 
-    if isinstance(materiais,list):
+        view = View()
+        view.add_item(CraftSelect(options))
 
-        for i,opcao in enumerate(materiais):
+        await interaction.response.send_message(
+            f"Crafts em **{local}**",
+            view=view,
+            ephemeral=True
+        )
 
-            for mat,qtd in opcao.items():
-                mensagem+=f"{mat}: {qtd*crafts}\n"
 
-            if i<len(materiais)-1:
-                mensagem+="\n------ //ou// ------\n\n"
+class CraftSelect(Select):
 
-    else:
+    def __init__(self, options):
+        super().__init__(placeholder="Escolhe o craft", options=options)
 
-        for mat,qtd in materiais.items():
-            mensagem+=f"{mat}: {qtd*crafts}\n"
+    async def callback(self, interaction: discord.Interaction):
 
-    await ctx.send(mensagem)
+        item = self.values[0]
 
-# COMANDO RECEITAS
+        await interaction.response.send_message(
+            f"Usa:\n`!craft {item} quantidade`",
+            ephemeral=True
+        )
 
-@bot.command()
-async def receitas(ctx):
 
-    texto="**Receitas disponíveis:**\n\n"
+class ReceitaMenu(View):
 
-    for item in receitas:
-        texto+=f"!craft {item} quantidade\n"
+    def __init__(self):
+        super().__init__()
+        self.add_item(LocalSelect())
 
-    await ctx.send(texto)
-
-# COMANDO LOCAIS
-
-@bot.command()
-async def locais(ctx):
-
-    texto="**Locais de craft:**\n\n"
-
-    for nome,cp in locais.items():
-        texto+=f"{nome} → {cp}\n"
-
-    await ctx.send(texto)
+# =========================
+# COMANDOS
+# =========================
 
 @bot.event
 async def on_ready():
     print(f"Bot ligado como {bot.user}")
+
+
+@bot.command()
+async def receitas(ctx):
+
+    view = ReceitaMenu()
+
+    await ctx.reply(
+        "Escolhe o local de craft:",
+        view=view
+    )
+
+
+@bot.command()
+async def locais(ctx):
+
+    msg = "**LOCAIS DE CRAFT**\n\n"
+
+    for nome, cp in locais_craft.items():
+        msg += f"{nome} → {cp}\n"
+
+    await ctx.send(msg)
+
+
+@bot.command()
+async def craft(ctx, item, quantidade: int = 1):
+
+    item = item.lower()
+
+    if item not in receitas_craft:
+        await ctx.send("Receita não encontrada.")
+        return
+
+    receita = receitas_craft[item]
+
+    lote = receita["lote"]
+    crafts = math.ceil(quantidade / lote)
+
+    cp = locais_craft.get(receita["local"], "?")
+
+    msg = f"**{item}**\n\n"
+    msg += f"Local: {receita['local']} ({cp})\n"
+    msg += f"Lote: {lote}\n"
+    msg += f"Quantidade pedida: {quantidade}\n"
+    msg += f"Crafts necessários: {crafts}\n\n"
+
+    msg += "**Materiais necessários:**\n"
+
+    materiais = receita["materiais"]
+
+    for mat, qtd in materiais.items():
+        total = qtd * crafts
+        msg += f"{mat} x{total}\n"
+
+    await ctx.send(msg)
+
 
 bot.run(TOKEN)
